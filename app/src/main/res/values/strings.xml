@@ -2,4 +2,7 @@
     <string name="app_name">CameraApp</string>
 
     <string name="action_settings">Settings</string>
+    <string name="title_activity_review_picture">ReviewPictureActivity</string>
+
+    <string name="hello_world">Hello world!</string>
 </resources>

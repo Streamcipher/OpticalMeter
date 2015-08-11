@@ -10,12 +10,16 @@
         android:layout_height="fill_parent"
         android:layout_weight="1" >
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="take pictscha"
-            android:id="@+id/shutter_button"
-            android:layout_gravity="center_horizontal|bottom" />
     </FrameLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="take pictscha"
+        android:id="@+id/shutter_button"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_alignParentTop="false"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true" />
 
 </RelativeLayout>

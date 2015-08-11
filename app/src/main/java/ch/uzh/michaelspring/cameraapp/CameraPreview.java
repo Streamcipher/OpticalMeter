@@ -87,4 +87,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         canvas.drawRect(10, 10, 10, 10, paint);
 
     }
+
+    public void setmCamera(Camera mCamera) {
+        this.mCamera = mCamera;
+    }
 }

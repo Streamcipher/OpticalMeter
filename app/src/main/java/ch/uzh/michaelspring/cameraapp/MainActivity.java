@@ -1,13 +1,26 @@
 package ch.uzh.michaelspring.cameraapp;
 
+import android.content.Intent;
 import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.hardware.Camera.*;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -16,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     private Camera mCamera;
     private Matrix matrix;
     private FrameLayout preview;
+
+    private PictureCallback mPicture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,6 +44,46 @@ public class MainActivity extends AppCompatActivity {
         mCameraPreview = new CameraPreview(this, mCamera);
         preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mCameraPreview);
+
+
+        //setup the picture taken callback
+        mPicture = new PictureCallback() {
+
+            @Override
+            public void onPictureTaken(byte[] data, Camera camera) {
+
+                File pictureFile = MediaManager.getOutputMediaFile(1);
+                if (pictureFile == null) {
+                    Log.d(Constants.TAG, "Error creating media file, check storage permissions: ");
+                    return;
+                }
+
+                try {
+                    FileOutputStream fos = new FileOutputStream(pictureFile);
+                    fos.write(data);
+                    fos.close();
+                } catch (FileNotFoundException e) {
+                    Log.d(Constants.TAG, "File not found: " + e.getMessage());
+                } catch (IOException e) {
+                    Log.d(Constants.TAG, "Error accessing file: " + e.getMessage());
+                }
+            }
+        };
+
+        //setup the onclick callback for the capture button and pass it the picture taken callback
+        Button captureButton = (Button) findViewById(R.id.shutter_button);
+        captureButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        // get an image from the camera
+                        mCamera.takePicture(null, null, mPicture);
+                        mCamera.startPreview();
+
+                        startReviewPictureActivity(v);
+                    }
+                }
+        );
 
     }
 
@@ -78,12 +133,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         releaseCamera();
     }
 
-    public static Camera getCameraInstance() {
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (null == mCamera) {
+            mCamera = getCameraInstance();
+            Log.i(Constants.TAG, "Camera was null on resume");
+            mCameraPreview.setmCamera(mCamera);
+            mCamera.startPreview();
+        }
+
+    }
+
+    private void startReviewPictureActivity(View v) {
+        Intent intent = new Intent(this, ReviewPictureActivity.class);
+
+        intent.putExtra("ch.uzh.michaelspring.cameraapp.SOME_EXTRA", "ASDF");
+        startActivity(intent);
+    }
+
+    private static Camera getCameraInstance() {
         Camera cam = null;
         try {
             //// TODO: 07.08.15 should be done in a worker thread (can take a long time and blocks the GUI)
@@ -102,4 +176,6 @@ public class MainActivity extends AppCompatActivity {
             mCamera = null;
         }
     }
+
+
 }
