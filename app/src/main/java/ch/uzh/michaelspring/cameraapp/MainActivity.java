@@ -1,10 +1,6 @@
 package ch.uzh.michaelspring.cameraapp;
 
-import android.graphics.Canvas;
 import android.graphics.Matrix;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.drawable.ShapeDrawable;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -18,7 +14,6 @@ public class MainActivity extends AppCompatActivity {
     private static int displayOrientation = 90;
     private CameraPreview mCameraPreview;
     private Camera mCamera;
-    private FaceBorder faceBorder;
     private Matrix matrix;
     private FrameLayout preview;
 
@@ -32,12 +27,9 @@ public class MainActivity extends AppCompatActivity {
 
         //setup the camera preview view
         mCameraPreview = new CameraPreview(this, mCamera);
-        preview  = (FrameLayout) findViewById(R.id.camera_preview);
+        preview = (FrameLayout) findViewById(R.id.camera_preview);
         preview.addView(mCameraPreview);
 
-        mCamera.setFaceDetectionListener(new MyFaceDetectionListener(this));
-
-        faceBorder = (FaceBorder) findViewById(R.id.face_border);
     }
 
     @Override
@@ -103,66 +95,11 @@ public class MainActivity extends AppCompatActivity {
 
         return cam;
     }
+
     private void releaseCamera() {
-        if (mCamera != null){
+        if (mCamera != null) {
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
-    }
-
-
-    //not used at the moment
-//    public Rect findFace(Bitmap bmp) {
-//        // Ask for 1 face
-//        Face faces[] = new FaceDetector.Face[1];
-//        FaceDetector detector = new FaceDetector( bmp.getWidth(), bmp.getHeight(), 1 );
-//        int count = detector.findFaces( bmp, faces );
-//
-//        Face face = null;
-//
-//        if( count > 0 ) {
-//            face = faces[0];
-//
-//            PointF midEyes = new PointF();
-//            face.getMidPoint( midEyes );
-//            Log.i( Constants.TAG,
-//                    "Found face. Confidence: " + face.confidence() + ". Eye Distance: " + face.eyesDistance() + " Pose: ("
-//                            + face.pose( FaceDetector.Face.EULER_X ) + "," + face.pose( FaceDetector.Face.EULER_Y ) + ","
-//                            + face.pose( FaceDetector.Face.EULER_Z ) + "). Eye Midpoint: (" + midEyes.x + "," + midEyes.y + ")" );
-//
-//            float eyedist = face.eyesDistance();
-//            PointF lt = new PointF( midEyes.x - eyedist * 2.0f, midEyes.y - eyedist * 2.5f );
-//            // Create rectangle around face.  Create a box based on the eyes and add some padding.
-//            // The ratio of head height to width is generally 9/5 but that makes the rect a bit to tall.
-//            return new Rect(
-//                    Math.max( (int) ( lt.x ), 0 ),
-//                    Math.max( (int) ( lt.y ), 0 ),
-//                    Math.min( (int) ( lt.x + eyedist * 4.0f ), bmp.getWidth() ),
-//                    Math.min( (int) ( lt.y + eyedist * 5.5f ), bmp.getHeight() )
-//            );
-//        }
-//
-//        return null;
-//    }
-
-    public void setDetectedFaces(Camera.Face[] faces) {
-        float coordinates[] = {faces[0].rect.centerX(), faces[0].rect.centerY()};
-        //use the above defined matrix to transform coordinates from the camera frame to display frame
-        matrix.mapPoints(coordinates);
-
-        faceBorder.invalidate();
-//        Paint paint = new Paint();
-//        paint.setARGB(100, 255, 10, 10);
-//        Canvas c = faceBorder.mHolder.lockCanvas();
-//        if (null != c) {
-//            c.drawRect(coordinates[0] - 10, coordinates[1] - 10, coordinates[0] + 10, coordinates[0] + 10, paint);
-//            mCameraPreview.mHolder.unlockCanvasAndPost(c);
-//        } else {
-//            Log.e(Constants.TAG, "setDetectedFaces: canvas was null");
-//        }
-
-
-        faceBorder.setX(coordinates[0]);
-        faceBorder.setY(coordinates[1]);
     }
 }
