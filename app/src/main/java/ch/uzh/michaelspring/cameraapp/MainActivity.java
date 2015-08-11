@@ -2,6 +2,7 @@ package ch.uzh.michaelspring.cameraapp;
 
 import android.graphics.Canvas;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.ShapeDrawable;
 import android.hardware.Camera;
@@ -148,6 +149,19 @@ public class MainActivity extends AppCompatActivity {
         float coordinates[] = {faces[0].rect.centerX(), faces[0].rect.centerY()};
         //use the above defined matrix to transform coordinates from the camera frame to display frame
         matrix.mapPoints(coordinates);
+
+        faceBorder.invalidate();
+//        Paint paint = new Paint();
+//        paint.setARGB(100, 255, 10, 10);
+//        Canvas c = faceBorder.mHolder.lockCanvas();
+//        if (null != c) {
+//            c.drawRect(coordinates[0] - 10, coordinates[1] - 10, coordinates[0] + 10, coordinates[0] + 10, paint);
+//            mCameraPreview.mHolder.unlockCanvasAndPost(c);
+//        } else {
+//            Log.e(Constants.TAG, "setDetectedFaces: canvas was null");
+//        }
+
+
         faceBorder.setX(coordinates[0]);
         faceBorder.setY(coordinates[1]);
     }
