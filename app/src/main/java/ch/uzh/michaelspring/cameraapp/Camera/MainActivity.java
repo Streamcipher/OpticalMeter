@@ -1,6 +1,7 @@
 package ch.uzh.michaelspring.cameraapp.Camera;
 
 import android.content.Intent;
+import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
@@ -33,10 +34,17 @@ public class MainActivity extends AppCompatActivity {
     private FrameLayout preview;
 
     private PictureCallback mPicture;
+    private Button captureButton;
+    private Button acceptPicButton;
+    private Button refusePicButton;
+    private byte[] pictureData;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        pictureData = null;
 
         setContentView(R.layout.activity_main);
 
@@ -53,48 +61,59 @@ public class MainActivity extends AppCompatActivity {
         //add preview to the layout
         preview.addView(mCameraPreview);
 
-        //start the preview
-//        mCamera.startPreview();
-
 
         //setup the picture taken callback
         mPicture = new PictureCallback() {
-
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-                File pictureFile = MediaManager.getOutputMediaFile(1);
-                if (pictureFile == null) {
-                    Log.d(Constants.TAG, "Error creating media file, check storage permissions: ");
-                    return;
-                }
-
-                try {
-                    FileOutputStream fos = new FileOutputStream(pictureFile);
-                    fos.write(data);
-                    fos.close();
-
-                    startReviewPictureActivity(pictureFile);
-
-                } catch (FileNotFoundException e) {
-                    Log.d(Constants.TAG, "File not found: " + e.getMessage());
-                } catch (IOException e) {
-                    Log.d(Constants.TAG, "Error accessing file: " + e.getMessage());
-                }
+                pictureData = data;
             }
         };
 
         //setup the onclick callback for the capture button and pass it the picture taken callback
-        Button captureButton = (Button) findViewById(R.id.shutter_button);
-        captureButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // get an image from the camera
-//                        initCamera();
-                        mCamera.takePicture(null, null, mPicture);
-                    }
+        captureButton = (Button) findViewById(R.id.shutter_button);
+        captureButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // get an image from the camera
+                mCamera.takePicture(null, null, mPicture);
+
+                acceptPicButton.setVisibility(View.VISIBLE);
+                refusePicButton.setVisibility(View.VISIBLE);
+            }
+        });
+
+        acceptPicButton = (Button) findViewById(R.id.accept_button);
+        //Hidden by default, only shown for snapshot
+        acceptPicButton.setVisibility(View.GONE);
+        acceptPicButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Save file and retrieve file handle to pass to next activity via intent extra.
+                //TODO pictureData could still be null, if this accept button get's touched before the picture callback returns.
+                File file = MediaManager.savePictureToDisk(pictureData);
+                if (null == file) {
+                    Log.e(Constants.TAG, "Picture wasn't saved.");
+                    return;
                 }
-        );
+                startReviewPictureActivity(file);
+            }
+        });
+
+        refusePicButton = (Button) findViewById(R.id.refuse_button);
+        //Hidden by default, only shown for snapshot
+        refusePicButton.setVisibility(View.GONE);
+        refusePicButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                acceptPicButton.setVisibility(View.GONE);
+                refusePicButton.setVisibility(View.GONE);
+
+                mCamera.startPreview();
+            }
+        });
+
+
 
     }
 
@@ -166,7 +185,6 @@ public class MainActivity extends AppCompatActivity {
     private static Camera getCameraInstance() {
         Camera cam = null;
         try {
-            //// TODO: 07.08.15 should be done in a worker thread (can take a long time and blocks the GUI)
             cam = Camera.open();
         } catch (Exception e) {
             Log.e(Constants.TAG, "get Instance of camera failed: " + e.getMessage());
@@ -181,8 +199,11 @@ public class MainActivity extends AppCompatActivity {
             setCameraDisplayOrientation(0, mCamera);
 
             Camera.Parameters params = mCamera.getParameters();
+            params.setPictureFormat(ImageFormat.JPEG);
             params.setJpegQuality(100);
             params.setRotation(displayOrientation);
+            //TODO proper settings, possibly changeable by user
+
 
             mCamera.setParameters(params);
         }

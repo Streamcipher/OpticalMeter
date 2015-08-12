@@ -9,7 +9,6 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_weight="1" >
-
     </FrameLayout>
 
     <Button
@@ -20,6 +19,25 @@
         android:layout_gravity="center_horizontal|bottom"
         android:layout_alignParentTop="false"
         android:layout_centerHorizontal="true"
+        android:layout_alignParentBottom="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="accept picture"
+        android:id="@+id/accept_button"
+        android:layout_alignParentTop="false"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="30dp"
+        android:layout_alignParentBottom="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="refuse picture"
+        android:id="@+id/refuse_button"
+        android:layout_alignParentTop="false"
+        android:layout_marginLeft="30dp"
         android:layout_alignParentBottom="true" />
 
 </RelativeLayout>

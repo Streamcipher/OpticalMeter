@@ -1,9 +1,13 @@
 package ch.uzh.michaelspring.cameraapp.Camera;
 
+import android.hardware.Camera;
 import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -23,6 +27,7 @@ public class MediaManager {
     /**
      * Create a File for saving an image or video.
      * Returns null if it doesn't work!
+     *
      * @param type
      * @return File, or null if something failed.
      */
@@ -35,7 +40,7 @@ public class MediaManager {
 
         String storageState = Environment.getExternalStorageState();
         if (!MEDIA_MOUNTED.equals(storageState)) {
-            Log.d(Constants.TAG, "Storage not accessible. Storage has the following state: " + storageState + "It should be "+MEDIA_MOUNTED);
+            Log.d(Constants.TAG, "Storage not accessible. Storage has the following state: " + storageState + "It should be " + MEDIA_MOUNTED);
             return null;
         }
 
@@ -67,5 +72,26 @@ public class MediaManager {
         }
 
         return mediaFile;
+    }
+
+    public static File savePictureToDisk(byte[] data) {
+        File pictureFile = MediaManager.getOutputMediaFile(1);
+        if (pictureFile == null) {
+            Log.d(Constants.TAG, "Error creating media file, check storage permissions: ");
+            return null;
+        }
+
+        try {
+            FileOutputStream fos = new FileOutputStream(pictureFile);
+            fos.write(data);
+            fos.close();
+
+        } catch (FileNotFoundException e) {
+            Log.d(Constants.TAG, "File not found: " + e.getMessage());
+        } catch (IOException e) {
+            Log.d(Constants.TAG, "Error accessing file: " + e.getMessage());
+        }
+
+        return pictureFile;
     }
 }
