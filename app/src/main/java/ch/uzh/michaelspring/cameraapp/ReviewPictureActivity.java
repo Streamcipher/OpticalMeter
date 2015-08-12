@@ -1,16 +1,41 @@
 package ch.uzh.michaelspring.cameraapp;
 
-import android.support.v7.app.AppCompatActivity;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
+
+import ch.uzh.michaelspring.cameraapp.Camera.MainActivity;
 
 public class ReviewPictureActivity extends AppCompatActivity {
+
+    ImageView imageView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_review_picture);
+
+        //Get URI to the new picture
+        Intent intent = getIntent();
+        String pictureURIString = intent.getStringExtra(MainActivity.PICTURE_URI);
+        Log.d(Constants.TAG, "extra address is: " + MainActivity.PICTURE_URI);
+
+        if (null == pictureURIString) {
+            Log.e(Constants.TAG, "Image URI wasn't in the intent extras.");
+            //TODO search for the image file?
+        } else {
+            Uri pictureURI = Uri.parse(pictureURIString);
+
+            imageView = (ImageView) findViewById(R.id.image_view);
+            imageView.setImageURI(pictureURI);
+        }
+
+
     }
 
     @Override

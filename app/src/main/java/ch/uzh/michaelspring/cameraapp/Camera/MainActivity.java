@@ -1,29 +1,31 @@
-package ch.uzh.michaelspring.cameraapp;
+package ch.uzh.michaelspring.cameraapp.Camera;
 
 import android.content.Intent;
 import android.graphics.Matrix;
 import android.hardware.Camera;
-import android.hardware.Camera.*;
+import android.hardware.Camera.PictureCallback;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+
+import ch.uzh.michaelspring.cameraapp.Constants;
+import ch.uzh.michaelspring.cameraapp.R;
+import ch.uzh.michaelspring.cameraapp.ReviewPictureActivity;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String PICTURE_URI = "ch.uzh.michaelspring.cameraapp.PICTURE_URI";
     private static int displayOrientation = 90;
     private CameraPreview mCameraPreview;
     private Camera mCamera;
@@ -38,12 +40,21 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        mCamera = getCameraInstance();
+//        mCamera = getCameraInstance();
+//        setCameraDisplayOrientation(0, mCamera);
 
-        //setup the camera preview view
+        //get the camera object, configure camera
+        initCamera();
+
+        //setup the camera preview view, bind camera to the preview view
         mCameraPreview = new CameraPreview(this, mCamera);
         preview = (FrameLayout) findViewById(R.id.camera_preview);
+
+        //add preview to the layout
         preview.addView(mCameraPreview);
+
+        //start the preview
+//        mCamera.startPreview();
 
 
         //setup the picture taken callback
@@ -51,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onPictureTaken(byte[] data, Camera camera) {
-
                 File pictureFile = MediaManager.getOutputMediaFile(1);
                 if (pictureFile == null) {
                     Log.d(Constants.TAG, "Error creating media file, check storage permissions: ");
@@ -62,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
                     FileOutputStream fos = new FileOutputStream(pictureFile);
                     fos.write(data);
                     fos.close();
+
+                    startReviewPictureActivity(pictureFile);
+
                 } catch (FileNotFoundException e) {
                     Log.d(Constants.TAG, "File not found: " + e.getMessage());
                 } catch (IOException e) {
@@ -77,10 +90,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         // get an image from the camera
+//                        initCamera();
                         mCamera.takePicture(null, null, mPicture);
-                        mCamera.startPreview();
-
-                        startReviewPictureActivity(v);
                     }
                 }
         );
@@ -90,7 +101,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-
 
         //Create and configure new matrix to transform coordinates from the cameraframe (-1000 to 1000) to the display frame)
         //this needs to be done here, because at onCreate the width and height of views are not yet defined.
@@ -141,19 +151,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        if (null == mCamera) {
-            mCamera = getCameraInstance();
-            Log.i(Constants.TAG, "Camera was null on resume");
-            mCameraPreview.setmCamera(mCamera);
-            mCamera.startPreview();
-        }
-
+        initCamera();
+        mCameraPreview.setmCameraAndStartPreview(mCamera);
     }
 
-    private void startReviewPictureActivity(View v) {
+    private void startReviewPictureActivity(File pictureFile) {
         Intent intent = new Intent(this, ReviewPictureActivity.class);
 
-        intent.putExtra("ch.uzh.michaelspring.cameraapp.SOME_EXTRA", "ASDF");
+        intent.putExtra(PICTURE_URI, pictureFile.toURI().toString());
+        Log.d(Constants.TAG, "(from mainActivity) extra address is: " + PICTURE_URI);
         startActivity(intent);
     }
 
@@ -162,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
         try {
             //// TODO: 07.08.15 should be done in a worker thread (can take a long time and blocks the GUI)
             cam = Camera.open();
-            cam.setDisplayOrientation(displayOrientation);
         } catch (Exception e) {
             Log.e(Constants.TAG, "get Instance of camera failed: " + e.getMessage());
         }
@@ -170,11 +175,54 @@ public class MainActivity extends AppCompatActivity {
         return cam;
     }
 
+    private void initCamera() {
+        if (null == mCamera) {
+            mCamera = getCameraInstance();
+            setCameraDisplayOrientation(0, mCamera);
+
+            Camera.Parameters params = mCamera.getParameters();
+            params.setJpegQuality(100);
+            params.setRotation(displayOrientation);
+
+            mCamera.setParameters(params);
+        }
+    }
+
     private void releaseCamera() {
         if (mCamera != null) {
             mCamera.release();        // release the camera for other applications
             mCamera = null;
         }
+    }
+
+    public void setCameraDisplayOrientation(int cameraId, android.hardware.Camera camera) {
+        android.hardware.Camera.CameraInfo info = new android.hardware.Camera.CameraInfo();
+        android.hardware.Camera.getCameraInfo(cameraId, info);
+        int rotation = this.getWindowManager().getDefaultDisplay().getRotation();
+        int degrees = 0;
+        switch (rotation) {
+            case Surface.ROTATION_0:
+                degrees = 0;
+                break;
+            case Surface.ROTATION_90:
+                degrees = 90;
+                break;
+            case Surface.ROTATION_180:
+                degrees = 180;
+                break;
+            case Surface.ROTATION_270:
+                degrees = 270;
+                break;
+        }
+
+        int result;
+        if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+            result = (info.orientation + degrees) % 360;
+            result = (360 - result) % 360;  // compensate the mirror
+        } else {  // back-facing
+            result = (info.orientation - degrees + 360) % 360;
+        }
+        camera.setDisplayOrientation(result);
     }
 
 

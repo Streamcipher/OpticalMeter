@@ -6,5 +6,5 @@ package ch.uzh.michaelspring.cameraapp;
 public class Constants {
 
     public static final String TAG = "Michi Camera App";
-    public static final String FILENAME = "OpticalMeterImage_";
+    public static final String DIRECTORYNAME = "OpticalMeterImages";
 }

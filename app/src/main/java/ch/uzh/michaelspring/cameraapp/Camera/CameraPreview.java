@@ -1,4 +1,4 @@
-package ch.uzh.michaelspring.cameraapp;
+package ch.uzh.michaelspring.cameraapp.Camera;
 
 /**
  * Created by melchior on 07.08.15.
@@ -13,6 +13,8 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+
+import ch.uzh.michaelspring.cameraapp.Constants;
 
 /** A basic Camera preview class */
 public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback {
@@ -80,15 +82,15 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     }
 
-    @Override
-    public void onDraw(Canvas canvas) {
-        Paint paint = new Paint();
-        paint.setARGB(100,100,255,200);
-        canvas.drawRect(10, 10, 10, 10, paint);
 
-    }
 
-    public void setmCamera(Camera mCamera) {
-        this.mCamera = mCamera;
+    public void setmCameraAndStartPreview(Camera camera) {
+        mCamera = camera;
+        try {
+            mCamera.setPreviewDisplay(mHolder);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        mCamera.startPreview();
     }
 }
